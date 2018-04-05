@@ -25,7 +25,7 @@ func Execute() {
 	checkErr(RootCmd.Execute())
 
 	RootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "verbose output")
-	RootCmd.PersistentFlags().StringVar(&configFlag, "config", "", "config file (default is ~/.itc)")
+	RootCmd.PersistentFlags().StringVar(&configFlag, "config", "", "config file (default is ~/.itc.yaml)")
 
 	RootCmd.PersistentFlags().String("appleID", "", "Your Apple ID")
 	RootCmd.PersistentFlags().String("appleIDPassword", "", "Your Apple ID password")
