@@ -62,13 +62,17 @@ func checkErr(err error) {
 	}
 }
 
+func printJSON(in interface{}) {
+	b, err := json.MarshalIndent(in, "", "  ")
+	checkErr(err)
+	print("%s", b)
+}
+
 func printErr(format string, a ...interface{}) {
-	fmt.Printf(format+"\n", a...)
+	print(format+"\n", a...)
 	os.Exit(1)
 }
 
-func prettyPrint(in interface{}) string {
-	b, err := json.MarshalIndent(in, "", "  ")
-	checkErr(err)
-	return fmt.Sprintf("%s\n", b)
+func print(format string, a ...interface{}) {
+	fmt.Printf(format+"\n", a...)
 }

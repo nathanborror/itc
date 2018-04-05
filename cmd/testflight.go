@@ -1,8 +1,6 @@
 package cmd
 
 import (
-	"fmt"
-
 	"github.com/nathanborror/itc/itunes"
 
 	"github.com/spf13/cobra"
@@ -32,11 +30,18 @@ var testersCreateCmd = &cobra.Command{
 	Run:   testersCreate,
 }
 
+var testersDeleteCmd = &cobra.Command{
+	Use:   "delete",
+	Short: "Delete a tester",
+	Run:   testersDelete,
+}
+
 var (
 	providerID   int
 	appID        int
 	groupID      string
 	createTester itunes.CreateTester
+	testerID     string
 )
 
 func init() {
@@ -64,15 +69,27 @@ func init() {
 	testersCreateCmd.MarkFlagRequired("first-name")
 	testersCreateCmd.MarkFlagRequired("last-name")
 	testersCmd.AddCommand(testersCreateCmd)
+
+	// testflight testers delete (required flags: --testerID)
+	testersDeleteCmd.Flags().StringVar(&testerID, "testerID", "", "Tester ID")
+	testersDeleteCmd.MarkFlagRequired("testerID")
+	testersCmd.AddCommand(testersDeleteCmd)
 }
 
 func testersList(cmd *cobra.Command, args []string) {
 	testers, err := client.TestersList(providerID, appID, nil)
 	checkErr(err)
-	fmt.Printf(prettyPrint(testers))
+	printJSON(testers)
 }
 
 func testersCreate(cmd *cobra.Command, args []string) {
 	err := client.TesterCreate([]itunes.CreateTester{createTester}, providerID, appID, groupID)
 	checkErr(err)
+	print("Tester '%s' created.", createTester.Email)
+}
+
+func testersDelete(cmd *cobra.Command, args []string) {
+	err := client.TesterDelete(testerID, providerID, appID)
+	checkErr(err)
+	print("Tester '%s' deleted.", testerID)
 }

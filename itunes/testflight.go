@@ -96,3 +96,20 @@ func (c *Client) TesterCreate(testers []CreateTester, providerID int, appID int,
 	}
 	return nil
 }
+
+// TesterDelete deletes a tester.
+func (c *Client) TesterDelete(testerID string, providerID int, appID int) error {
+	host := fmt.Sprintf("%s/providers/%d/apps/%d/testers/%s", testflightPath, providerID, appID, testerID)
+	req, err := c.NewRequest("DELETE", host, nil)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("Error (%d): %s", resp.StatusCode, resp.Status)
+	}
+	return nil
+}
