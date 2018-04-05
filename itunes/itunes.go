@@ -11,12 +11,15 @@ import (
 	"strings"
 )
 
+const itunesHost = "https://itunesconnect.apple.com/WebObjects/iTunesConnect.woa/ra"
+
 // Client contains credentials to make iTunes Connect requests.
 type Client struct {
 	ServiceKey    string
 	ACN01         string
 	MyAccountInfo string
 	ITCtx         string
+	Session       *Session
 }
 
 // NewClient returns an iTunes Connect client.
@@ -33,6 +36,45 @@ func NewClient(appleID string, password string) (*Client, error) {
 	}
 	return &c, nil
 }
+
+type AppSummary struct {
+	AdamID   string `json:"adamId"`
+	Name     string `json:"name"`
+	BundleID string `json:"bundleId"`
+}
+
+type Details struct {
+	Summaries []AppSummary `json:"summaries"`
+}
+
+type DetailsResponse struct {
+	Data Details `json:"data"`
+}
+
+// Details returns account details.
+func (c *Client) Details() (*DetailsResponse, error) {
+	req, err := c.NewRequest("GET", itunesHost+"/apps/manageyourapps/summary/v2", nil)
+	if err != nil {
+		return nil, err
+	}
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	var details DetailsResponse
+	if err := json.Unmarshal(body, &details); err != nil {
+		return nil, err
+	}
+	return &details, nil
+}
+
+// Convenience
 
 // NewRequest returns a valid iTunes Connect request with the necessary cookies
 // and headers set in advance.
@@ -140,6 +182,25 @@ func (c *Client) signin(appleID string, password string) error {
 	return nil
 }
 
+// Session contains information about your current session along with all
+// the providers you may belong to.
+type Session struct {
+	User struct {
+		FullName string `json:"fullName"`
+		Email    string `json:"emailAddress"`
+		PRSID    string `json:"prsId"`
+	} `json:"user"`
+	Provider           Provider   `json:"provider"`
+	AvailableProviders []Provider `json:"availableProviders"`
+}
+
+// Provider contains provider information.
+type Provider struct {
+	ProviderID   int      `json:"providerId"`
+	Name         string   `json:"name"`
+	ContentTypes []string `json:"contentTypes"`
+}
+
 func (c *Client) session() error {
 	host := "https://olympus.itunes.apple.com/v1/session"
 	req, err := http.NewRequest("GET", host, nil)
@@ -156,7 +217,11 @@ func (c *Client) session() error {
 			c.ITCtx = cookie.Value
 		}
 	}
-	return nil
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(body, &c.Session)
 }
 
 type serviceConfigResponse struct {

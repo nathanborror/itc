@@ -21,7 +21,22 @@ var RootCmd = &cobra.Command{
 	Short: "Control your iTunes Connect account.",
 }
 
+var ProvidersCmd = &cobra.Command{
+	Use:   "providers",
+	Short: "Prints available providers associated with your iTunes Connect account.",
+	Run:   providers,
+}
+
+var DetailsCmd = &cobra.Command{
+	Use:   "details",
+	Short: "Prints available details about your iTunes Connect account.",
+	Run:   details,
+}
+
 func Execute() {
+	RootCmd.AddCommand(ProvidersCmd)
+	RootCmd.AddCommand(DetailsCmd)
+
 	checkErr(RootCmd.Execute())
 
 	RootCmd.PersistentFlags().BoolVarP(&verboseFlag, "verbose", "v", false, "verbose output")
@@ -55,6 +70,18 @@ func initConfig() {
 	client, err = itunes.NewClient(id, password)
 	checkErr(err)
 }
+
+func providers(cmd *cobra.Command, args []string) {
+	printJSON(client.Session.AvailableProviders)
+}
+
+func details(cmd *cobra.Command, args []string) {
+	details, err := client.Details()
+	checkErr(err)
+	printJSON(details)
+}
+
+// Convenience
 
 func checkErr(err error) {
 	if err != nil {
