@@ -58,9 +58,13 @@ func initConfig() {
 
 func checkErr(err error) {
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		printErr(err.Error())
 	}
+}
+
+func printErr(format string, a ...interface{}) {
+	fmt.Printf(format+"\n", a...)
+	os.Exit(1)
 }
 
 func prettyPrint(in interface{}) string {
