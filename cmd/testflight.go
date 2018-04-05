@@ -18,10 +18,16 @@ var testersCmd = &cobra.Command{
 	Short: "Lists testers",
 }
 
-var testersListCmd = &cobra.Command{
+var testerListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List testers",
-	Run:   testersList,
+	Run:   testerList,
+}
+
+var testerGroupCmd = &cobra.Command{
+	Use:   "groups",
+	Short: "List test groups",
+	Run:   testerGroups,
 }
 
 var testersCreateCmd = &cobra.Command{
@@ -59,7 +65,10 @@ func init() {
 	testflightCmd.AddCommand(testersCmd)
 
 	// testflight testers list
-	testersCmd.AddCommand(testersListCmd)
+	testersCmd.AddCommand(testerListCmd)
+
+	// testflight testers group
+	testersCmd.AddCommand(testerGroupCmd)
 
 	// testflight testers create (required flags: --email, --first-name, --last-name, --groupID)
 	testersCreateCmd.Flags().StringVar(&createTester.Email, "email", "", "Tester email")
@@ -76,10 +85,16 @@ func init() {
 	testersCmd.AddCommand(testersDeleteCmd)
 }
 
-func testersList(cmd *cobra.Command, args []string) {
-	testers, err := client.TestersList(providerID, appID, nil)
+func testerList(cmd *cobra.Command, args []string) {
+	testers, err := client.TesterList(providerID, appID, nil)
 	checkErr(err)
 	printJSON(testers)
+}
+
+func testerGroups(cmd *cobra.Command, args []string) {
+	groups, err := client.TesterGroups(providerID, appID, nil)
+	checkErr(err)
+	printJSON(groups)
 }
 
 func testersCreate(cmd *cobra.Command, args []string) {

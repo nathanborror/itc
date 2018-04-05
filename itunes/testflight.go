@@ -39,12 +39,12 @@ type Tester struct {
 
 // TesterListResponse contains a list of Testers.
 type TesterListResponse struct {
-	Data []Tester
+	Data []Tester `json:"data"`
 }
 
-// TestersList returns a TesterListResponse that contains all the testers for
+// TesterList returns a TesterListResponse that contains all the testers for
 // a given app identifier.
-func (c *Client) TestersList(providerID int, appID int, paging *Paging) (*TesterListResponse, error) {
+func (c *Client) TesterList(providerID int, appID int, paging *Paging) (*TesterListResponse, error) {
 	host := fmt.Sprintf("%s/providers/%d/apps/%d/testers", testflightPath, providerID, appID)
 	req, err := c.NewRequest("GET", host, nil)
 	req.URL.RawQuery = paging.Encode(req.URL)
@@ -63,6 +63,49 @@ func (c *Client) TestersList(providerID int, appID int, paging *Paging) (*Tester
 		return nil, c.ErrorForServiceErrors(body)
 	}
 	var testers TesterListResponse
+	if err := json.Unmarshal(body, &testers); err != nil {
+		return nil, err
+	}
+	return &testers, nil
+}
+
+// TesterGroup contains information about a test group.
+type TesterGroup struct {
+	ID                     string `json:"id"`
+	ProviderID             int    `json:"providerId"`
+	AppAdamID              int    `json:"appAdamId"`
+	Name                   string `json:"name"`
+	Created                string `json:"created"`
+	Active                 bool   `json:"active"`
+	IsInternalGroup        bool   `json:"isInternalGroup"`
+	IsDefaultExternalGroup bool   `json:"isDefaultExternalGroup"`
+}
+
+// TesterGroupResponse contains a list of TesterGroups.
+type TesterGroupResponse struct {
+	Data []TesterGroup `json:"data"`
+}
+
+// TesterGroups returns a list of tester groups.
+func (c *Client) TesterGroups(providerID int, appID int, paging *Paging) (*TesterGroupResponse, error) {
+	host := fmt.Sprintf("%s/providers/%d/apps/%d/groups", testflightPath, providerID, appID)
+	req, err := c.NewRequest("GET", host, nil)
+	req.URL.RawQuery = paging.Encode(req.URL)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return nil, c.ErrorForServiceErrors(body)
+	}
+	var testers TesterGroupResponse
 	if err := json.Unmarshal(body, &testers); err != nil {
 		return nil, err
 	}
